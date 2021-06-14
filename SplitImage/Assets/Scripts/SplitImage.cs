@@ -67,50 +67,151 @@ public class SplitImage : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // use bezier curve.
-        Bezier bez = new Bezier(mCurvyCoords.OfType<Vec2>().ToList());
+        int offset_x = 20;
+        int offset_y = 20;
 
         // show the bezier curve.
         mBezierCurve.material = new Material(Shader.Find("Sprites/Default"));
         mBezierCurve.startWidth = 0.1f;
         mBezierCurve.endWidth = 0.1f;
 
+        // use bezier curve.
+        Bezier bez = new Bezier(mCurvyCoords.OfType<Vec2>().ToList());
         List<Vector3> points = new List<Vector3>();
 
-        Vector3 offset = new Vector3(20.0f, 20.0f, 0.0f);
         for (int i = 0; i < 100; i++)
         {
             Vec2 bp = bez.ValueAt(i / 100.0f);
             Vector3 p = new Vector3(bp.x, bp.y, 0.0f);
-            p = p + offset;
+
             points.Add(p);
-            mBezierCurve.SetPosition(i, p);
+            mBezierCurve.SetPosition(i, p + new Vector3(offset_x, offset_y, 0.0f));
         }
 
         Texture2D texture = SpriteUtils.LoadTexture("Images/" + mImageFilename);
+
+        Texture2D new_tex = new Texture2D(140, 140, TextureFormat.ARGB32, 1, true);
+
+        Color trans = new Color(0.0f, 0.0f, 0.0f, 0.0f);
         if (!texture.isReadable)
         {
             Debug.Log("Texture is not readable");
         }
-        // align the bezier points to continuous pixels.
-        for (int i = 20; i < 120; ++i)
+        for (int i = 0; i < 140; ++i)
         {
-            int y = GetInterpolatedY(points, i);
-            Debug.Log("Y: " + y);
-            for (int j = 0; j < y; ++j)
+            for (int j = 0; j <140; ++j)
             {
                 Color color = texture.GetPixel(i, j);
-                color.r = 1.0f;
-                color.g = 0.0f;
-                color.b = 0.0f;
-                color.a = 1.0f;
-                texture.SetPixel(i, j, color);
+                new_tex.SetPixel(i, j, color);
+                if(i < 20 && j < 20)
+                {
+                    new_tex.SetPixel(i, j, trans);
+                }
+                if (i >= 120 && j < 20)
+                {
+                    new_tex.SetPixel(i, j, trans);
+                }
+                if (i >= 120 && j >= 120)
+                {
+                    new_tex.SetPixel(i, j, trans);
+                }
+                if (i < 20 && j >= 120)
+                {
+                    new_tex.SetPixel(i, j, trans);
+                }
             }
         }
 
-        texture.Apply();
 
-        Sprite sprite = SpriteUtils.LoadNewSprite(texture, 0, 0, 140, 140);
+        //// Bottom.
+        //for (int i = 0; i < 100; ++i)
+        //{
+        //    int y = GetInterpolatedY(points, i);
+
+        //    for (int j = 0; j < y + offset_y; ++j)
+        //    {
+        //        new_tex.SetPixel(i+offset_x, j, trans);
+        //    }
+        //}
+        // Bottom reverse
+        for (int i = 0; i < 100; ++i)
+        {
+            int y = -GetInterpolatedY(points, i);
+
+            for (int j = 0; j < y + offset_y; ++j)
+            {
+                new_tex.SetPixel(i + offset_x, j, trans);
+            }
+        }
+
+        //left
+        //for (int j = 0; j < 100; ++j)
+        //{
+        //    int x = GetInterpolatedY(points, j);
+
+        //    for (int i = 0; i < x + offset_x; ++i)
+        //    {
+        //        new_tex.SetPixel(i, j + offset_y, trans);
+        //    }
+        //}
+
+        //left reverse
+        for (int j = 0; j < 100; ++j)
+        {
+            int x = -GetInterpolatedY(points, j);
+
+            for (int i = 0; i < x + offset_x; ++i)
+            {
+                new_tex.SetPixel(i, j + offset_y, trans);
+            }
+        }
+
+        //up
+        //for (int i = 0; i < 100; ++i)
+        //{
+        //    int y = -GetInterpolatedY(points, i);
+
+        //    for (int j = 120 + y; j < 140; ++j)
+        //    {
+        //        new_tex.SetPixel(i + offset_x, j, trans);
+        //    }
+        //}
+
+        // up reverse
+        for (int i = 0; i < 100; ++i)
+        {
+            int y = GetInterpolatedY(points, i);
+
+            for (int j = 120 + y; j < 140; ++j)
+            {
+                new_tex.SetPixel(i + offset_x, j, trans);
+            }
+        }
+
+        //right
+        //for (int j = 0; j < 100; ++j)
+        //{
+        //    int x = -GetInterpolatedY(points, j);
+
+        //    for (int i = 120+x; i < 140; ++i)
+        //    {
+        //        new_tex.SetPixel(i, j + offset_y, trans);
+        //    }
+        //}
+        //right reverse
+        for (int j = 0; j < 100; ++j)
+        {
+            int x = GetInterpolatedY(points, j);
+
+            for (int i = 120 + x; i < 140; ++i)
+            {
+                new_tex.SetPixel(i, j + offset_y, trans);
+            }
+        }
+
+        new_tex.Apply();
+
+        Sprite sprite = SpriteUtils.LoadNewSprite(new_tex, 0, 0, 140, 140);
         mSpriteRenderer.sprite = sprite;
     }
 

@@ -663,6 +663,8 @@ namespace Utils
             p.y = (float)ValueAt(t, 1);
             return p;
         }
+
+
     }
 
 //        Tangent tangentAt(float t, bool normalize = true)
