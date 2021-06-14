@@ -45,65 +45,90 @@ public class SplitImage : MonoBehaviour
         mSpriteRenderer.sprite = sprite;
     }
 
-    int GetInterpolatedY(List<Vector3> points, int x)
+    int GetInterpolatedY(List<Vector3> mBezierPoints, int x)
     {
-        for(int i = 1; i < points.Count; ++i)
+        for(int i = 1; i < mBezierPoints.Count; ++i)
         {
-            if(points[i].x >= x)
+            if(mBezierPoints[i].x >= x)
             {
-                float x1 = points[i - 1].x;
-                float x2 = points[i].x;
+                float x1 = mBezierPoints[i - 1].x;
+                float x2 = mBezierPoints[i].x;
 
-                float y1 = points[i - 1].y;
-                float y2 = points[i].y;
+                float y1 = mBezierPoints[i - 1].y;
+                float y2 = mBezierPoints[i].y;
 
                 float y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
                 return (int)y;
             }
         }
-        return (int)points[points.Count - 1].y;
+        return (int)mBezierPoints[mBezierPoints.Count - 1].y;
     }
 
-    // Start is called before the first frame update
-    void Start()
+    public enum Direction
     {
-        int offset_x = 20;
-        int offset_y = 20;
+        UP,
+        UP_REVERSE,
+        RIGHT,
+        RIGHT_REVERSE,
+        DOWN,
+        DOWN_REVERSE,
+        LEFT,
+        LEFT_REVERSE,
+    }
+    List<Vector3> mBezierPoints = new List<Vector3>();
+    //Texture2D mTileTexture;
+    Texture2D mBaseTexture;
 
+    Color trans = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+
+    GameObject[,] mGameObjects;
+
+    private int mTilesX;
+    private int mTilesY;
+
+    void SetupLineRenderer()
+    {
         // show the bezier curve.
         mBezierCurve.material = new Material(Shader.Find("Sprites/Default"));
         mBezierCurve.startWidth = 0.1f;
         mBezierCurve.endWidth = 0.1f;
 
+        for (int i = 0; i < 100; i++)
+        {
+            mBezierCurve.SetPosition(i, mBezierPoints[i] + new Vector3(20, 20, 0.0f));
+        }
+    }
+
+    void CreateBezierCurve()
+    {
         // use bezier curve.
         Bezier bez = new Bezier(mCurvyCoords.OfType<Vec2>().ToList());
-        List<Vector3> points = new List<Vector3>();
 
         for (int i = 0; i < 100; i++)
         {
             Vec2 bp = bez.ValueAt(i / 100.0f);
             Vector3 p = new Vector3(bp.x, bp.y, 0.0f);
 
-            points.Add(p);
-            mBezierCurve.SetPosition(i, p + new Vector3(offset_x, offset_y, 0.0f));
+            mBezierPoints.Add(p);
         }
+    }
 
-        Texture2D texture = SpriteUtils.LoadTexture("Images/" + mImageFilename);
+    Texture2D CreateTileTexture(int indx, int indy)
+    {
+        int w = 140;
+        int h = 140;
 
-        Texture2D new_tex = new Texture2D(140, 140, TextureFormat.ARGB32, 1, true);
+        Texture2D new_tex = new Texture2D(w, h, TextureFormat.ARGB32, 1, true);
 
-        Color trans = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-        if (!texture.isReadable)
-        {
-            Debug.Log("Texture is not readable");
-        }
+        int startX = indx * 120;
+        int startY = indy * 120;
         for (int i = 0; i < 140; ++i)
         {
-            for (int j = 0; j <140; ++j)
+            for (int j = 0; j < 140; ++j)
             {
-                Color color = texture.GetPixel(i, j);
+                Color color = mBaseTexture.GetPixel(i + startX, j + startY);
                 new_tex.SetPixel(i, j, color);
-                if(i < 20 && j < 20)
+                if (i < 20 && j < 20)
                 {
                     new_tex.SetPixel(i, j, trans);
                 }
@@ -121,98 +146,207 @@ public class SplitImage : MonoBehaviour
                 }
             }
         }
+        return new_tex;
+    }
 
+    void CreateSpriteGameObject(int i, int j)
+    {
+        GameObject obj = new GameObject();
+        obj.name = "Tile_" + i.ToString() + "_" + j.ToString();
+        SpriteRenderer spren = obj.AddComponent<SpriteRenderer>();
 
-        //// Bottom.
-        //for (int i = 0; i < 100; ++i)
-        //{
-        //    int y = GetInterpolatedY(points, i);
+        obj.transform.position = new Vector3(i * 100, j * 100, 0.0f);
 
-        //    for (int j = 0; j < y + offset_y; ++j)
-        //    {
-        //        new_tex.SetPixel(i+offset_x, j, trans);
-        //    }
-        //}
-        // Bottom reverse
-        for (int i = 0; i < 100; ++i)
+        // create a new tile texture.
+        Texture2D mTileTexture = CreateTileTexture(i, j);
+
+        List<Direction> directions = new List<Direction>();
+        directions.Add(Direction.UP);
+        directions.Add(Direction.RIGHT);
+        directions.Add(Direction.DOWN);
+        directions.Add(Direction.LEFT);
+        if (i == 0)
         {
-            int y = -GetInterpolatedY(points, i);
-
-            for (int j = 0; j < y + offset_y; ++j)
-            {
-                new_tex.SetPixel(i + offset_x, j, trans);
-            }
+            directions.Remove(Direction.LEFT);
+        }
+        if (i == mTilesX - 1)
+        {
+            directions.Remove(Direction.RIGHT);
+        }
+        if (j == 0)
+        {
+            directions.Remove(Direction.DOWN);
+        }
+        if (j == mTilesY-1)
+        {
+            directions.Remove(Direction.UP);
         }
 
-        //left
-        //for (int j = 0; j < 100; ++j)
-        //{
-        //    int x = GetInterpolatedY(points, j);
-
-        //    for (int i = 0; i < x + offset_x; ++i)
-        //    {
-        //        new_tex.SetPixel(i, j + offset_y, trans);
-        //    }
-        //}
-
-        //left reverse
-        for (int j = 0; j < 100; ++j)
+        for(int d = 0; d < directions.Count; ++d)
         {
-            int x = -GetInterpolatedY(points, j);
-
-            for (int i = 0; i < x + offset_x; ++i)
-            {
-                new_tex.SetPixel(i, j + offset_y, trans);
-            }
+            ApplyBezierMask(mTileTexture, directions[d]);
         }
 
-        //up
-        //for (int i = 0; i < 100; ++i)
-        //{
-        //    int y = -GetInterpolatedY(points, i);
+        mTileTexture.Apply();
 
-        //    for (int j = 120 + y; j < 140; ++j)
-        //    {
-        //        new_tex.SetPixel(i + offset_x, j, trans);
-        //    }
-        //}
+        // Set the tile texture to the sprite.
+        Sprite sprite = SpriteUtils.LoadNewSprite(mTileTexture, 0, 0, 140, 140);
+        spren.sprite = sprite;
+    }
 
-        // up reverse
-        for (int i = 0; i < 100; ++i)
+    // Start is called before the first frame update
+    void Start()
+    {
+        // Load the main image.
+        Texture2D tex = SpriteUtils.LoadTexture("Images/" + mImageFilename);
+        if (!tex.isReadable)
         {
-            int y = GetInterpolatedY(points, i);
-
-            for (int j = 120 + y; j < 140; ++j)
-            {
-                new_tex.SetPixel(i + offset_x, j, trans);
-            }
+            Debug.Log("Texture is not readable");
+            return;
         }
 
-        //right
-        //for (int j = 0; j < 100; ++j)
-        //{
-        //    int x = -GetInterpolatedY(points, j);
+        mTilesX = tex.width / 100;
+        mTilesY = tex.height / 100;
 
-        //    for (int i = 120+x; i < 140; ++i)
-        //    {
-        //        new_tex.SetPixel(i, j + offset_y, trans);
-        //    }
-        //}
-        //right reverse
-        for (int j = 0; j < 100; ++j)
+        // add 20 pixel border around.
+        Texture2D new_tex = new Texture2D(tex.width + 40, tex.height + 40, TextureFormat.ARGB32, 1, true);
+        for(int i = 20; i < tex.width + 20; ++i)
         {
-            int x = GetInterpolatedY(points, j);
-
-            for (int i = 120 + x; i < 140; ++i)
+            for (int j = 20; j < tex.height + 20; ++j)
             {
-                new_tex.SetPixel(i, j + offset_y, trans);
+                Color col = tex.GetPixel(i - 20, j - 20);
+                col.a = 1.0f;
+                new_tex.SetPixel(i, j, col);
             }
         }
-
         new_tex.Apply();
+        mBaseTexture = new_tex;
 
-        Sprite sprite = SpriteUtils.LoadNewSprite(new_tex, 0, 0, 140, 140);
+        // create the bezier curve.
+        CreateBezierCurve();
+
+        mGameObjects = new GameObject[mTilesX, mTilesY];
+        for (int i = 0; i < mTilesX; ++i)
+        {
+            for (int j = 0; j < mTilesY; ++j)
+            {
+                CreateSpriteGameObject(i, j);
+            }
+        }
+
+        Sprite sprite = SpriteUtils.LoadNewSprite(mBaseTexture, 0, 0, mBaseTexture.width, mBaseTexture.height);
         mSpriteRenderer.sprite = sprite;
+    }
+
+    void ApplyBezierMask(Texture2D mTileTexture, Direction dir)
+    {
+        switch(dir)
+        {
+            case Direction.UP:
+                {
+                    for (int i = 0; i < 100; ++i)
+                    {
+                        int y = -GetInterpolatedY(mBezierPoints, i);
+
+                        for (int j = 120 + y; j < 140; ++j)
+                        {
+                            mTileTexture.SetPixel(i + 20, j, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.UP_REVERSE:
+                {
+                    for (int i = 0; i < 100; ++i)
+                    {
+                        int y = GetInterpolatedY(mBezierPoints, i);
+
+                        for (int j = 120 + y; j < 140; ++j)
+                        {
+                            mTileTexture.SetPixel(i + 20, j, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.RIGHT:
+                {
+                    for (int j = 0; j < 100; ++j)
+                    {
+                        int x = -GetInterpolatedY(mBezierPoints, j);
+
+                        for (int i = 120 + x; i < 140; ++i)
+                        {
+                            mTileTexture.SetPixel(i, j + 20, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.RIGHT_REVERSE:
+                {
+                    for (int j = 0; j < 100; ++j)
+                    {
+                        int x = GetInterpolatedY(mBezierPoints, j);
+
+                        for (int i = 120 + x; i < 140; ++i)
+                        {
+                            mTileTexture.SetPixel(i, j + 20, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.DOWN:
+                {
+                    for (int i = 0; i < 100; ++i)
+                    {
+                        int y = GetInterpolatedY(mBezierPoints, i);
+
+                        for (int j = 0; j < y + 20; ++j)
+                        {
+                            mTileTexture.SetPixel(i + 20, j, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.DOWN_REVERSE:
+                {
+                    for (int i = 0; i < 100; ++i)
+                    {
+                        int y = -GetInterpolatedY(mBezierPoints, i);
+
+                        for (int j = 0; j < y + 20; ++j)
+                        {
+                            mTileTexture.SetPixel(i + 20, j, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.LEFT:
+                {
+                    for (int j = 0; j < 100; ++j)
+                    {
+                        int x = GetInterpolatedY(mBezierPoints, j);
+
+                        for (int i = 0; i < x + 20; ++i)
+                        {
+                            mTileTexture.SetPixel(i, j + 20, trans);
+                        }
+                    }
+                    break;
+                }
+            case Direction.LEFT_REVERSE:
+                {
+                    for (int j = 0; j < 100; ++j)
+                    {
+                        int x = -GetInterpolatedY(mBezierPoints, j);
+
+                        for (int i = 0; i < x + 20; ++i)
+                        {
+                            mTileTexture.SetPixel(i, j + 20, trans);
+                        }
+                    }
+                    break;
+                }
+        }
     }
 
     // Update is called once per frame
