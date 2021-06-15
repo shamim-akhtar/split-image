@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Utils;
+using Curves;
 using System.Linq;
 
 public class SplitImage : MonoBehaviour
@@ -11,7 +11,7 @@ public class SplitImage : MonoBehaviour
     public Sprite mSprite;
     public LineRenderer mBezierCurve;
 
-    Utils.Vec2[] mCurvyCoords = new Utils.Vec2[]
+    Vec2[] mCurvyCoords = new Vec2[]
     {
         new Vec2(0, 0),
         new Vec2(35, 15),
