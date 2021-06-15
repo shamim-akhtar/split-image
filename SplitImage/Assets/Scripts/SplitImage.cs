@@ -120,8 +120,8 @@ public class SplitImage : MonoBehaviour
 
         Texture2D new_tex = new Texture2D(w, h, TextureFormat.ARGB32, 1, true);
 
-        int startX = indx * 120;
-        int startY = indy * 120;
+        int startX = indx * 100;
+        int startY = indy * 100;
         for (int i = 0; i < 140; ++i)
         {
             for (int j = 0; j < 140; ++j)
@@ -161,25 +161,25 @@ public class SplitImage : MonoBehaviour
         Texture2D mTileTexture = CreateTileTexture(i, j);
 
         List<Direction> directions = new List<Direction>();
-        directions.Add(Direction.UP);
-        directions.Add(Direction.RIGHT);
-        directions.Add(Direction.DOWN);
-        directions.Add(Direction.LEFT);
+        directions.Add(Direction.UP_REVERSE);
+        directions.Add(Direction.RIGHT_REVERSE);
+        directions.Add(Direction.DOWN_REVERSE);
+        directions.Add(Direction.LEFT_REVERSE);
         if (i == 0)
         {
-            directions.Remove(Direction.LEFT);
+            directions.Remove(Direction.LEFT_REVERSE);
         }
         if (i == mTilesX - 1)
         {
-            directions.Remove(Direction.RIGHT);
+            directions.Remove(Direction.RIGHT_REVERSE);
         }
         if (j == 0)
         {
-            directions.Remove(Direction.DOWN);
+            directions.Remove(Direction.DOWN_REVERSE);
         }
         if (j == mTilesY-1)
         {
-            directions.Remove(Direction.UP);
+            directions.Remove(Direction.UP_REVERSE);
         }
 
         for(int d = 0; d < directions.Count; ++d)
