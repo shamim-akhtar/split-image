@@ -250,7 +250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65cdcb12eaac7894f9d67c0440de20b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mImageFilename: pgge_3_3
+  mImageFilename: nature01_20_13
   mSpriteRenderer: {fileID: 1817238526}
   mSprite: {fileID: 0}
   mBezierCurve: {fileID: 1817238527}

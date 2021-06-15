@@ -442,8 +442,8 @@ public class SplitImage : MonoBehaviour
 
     private void Awake()
     {
-        const int initialSeed = 1;
-        Random.InitState(initialSeed);
+        //const int initialSeed = 1;
+        //Random.InitState(initialSeed);
     }
 
     // Update is called once per frame
