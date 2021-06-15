@@ -296,8 +296,29 @@ public class SplitImage : MonoBehaviour
             }
         }
 
+        // now make the background image light transparent.
+        for (int i = 20; i < tex.width + 20; ++i)
+        {
+            for (int j = 20; j < tex.height + 20; ++j)
+            {
+                Color col = tex.GetPixel(i - 20, j - 20);
+                col.a = 0.2f;
+                new_tex.SetPixel(i, j, col);
+            }
+        }
+        new_tex.Apply();
+        mBaseTexture = new_tex;
+
         Sprite sprite = SpriteUtils.LoadNewSprite(mBaseTexture, 0, 0, mBaseTexture.width, mBaseTexture.height);
         mSpriteRenderer.sprite = sprite;
+
+        RelocateCamera();
+    }
+
+    void RelocateCamera()
+    {
+        Camera.main.orthographicSize = 1.2f * mBaseTexture.height / 2.0f;
+        Camera.main.transform.position = new Vector3(mBaseTexture.width / 2.0f, mBaseTexture.height / 2.0f, -10.0f);
     }
 
     void ApplyBezierMask(Texture2D mTileTexture, Direction dir)
@@ -310,7 +331,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int y = -GetInterpolatedY(mBezierPoints, i);
 
-                        for (int j = 120 + y; j < 140; ++j)
+                        mTileTexture.SetPixel(i + 20, 120 + y, Color.gray);
+                        for (int j = 119 + y; j < 140; ++j)
                         {
                             mTileTexture.SetPixel(i + 20, j, trans);
                         }
@@ -323,7 +345,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int y = GetInterpolatedY(mBezierPoints, i);
 
-                        for (int j = 120 + y; j < 140; ++j)
+                        mTileTexture.SetPixel(i + 20, 120 + y, Color.gray);
+                        for (int j = 121 + y; j < 140; ++j)
                         {
                             mTileTexture.SetPixel(i + 20, j, trans);
                         }
@@ -336,7 +359,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int x = -GetInterpolatedY(mBezierPoints, j);
 
-                        for (int i = 120 + x; i < 140; ++i)
+                        mTileTexture.SetPixel(120 + x, j + 20, Color.gray);
+                        for (int i = 119 + x; i < 140; ++i)
                         {
                             mTileTexture.SetPixel(i, j + 20, trans);
                         }
@@ -349,7 +373,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int x = GetInterpolatedY(mBezierPoints, j);
 
-                        for (int i = 120 + x; i < 140; ++i)
+                        mTileTexture.SetPixel(120 + x, j + 20, Color.gray);
+                        for (int i = 121 + x; i < 140; ++i)
                         {
                             mTileTexture.SetPixel(i, j + 20, trans);
                         }
@@ -362,7 +387,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int y = GetInterpolatedY(mBezierPoints, i);
 
-                        for (int j = 0; j < y + 20; ++j)
+                        mTileTexture.SetPixel(i + 20, y + 20, trans);
+                        for (int j = 0; j < y + 19; ++j)
                         {
                             mTileTexture.SetPixel(i + 20, j, trans);
                         }
@@ -375,7 +401,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int y = -GetInterpolatedY(mBezierPoints, i);
 
-                        for (int j = 0; j < y + 20; ++j)
+                        mTileTexture.SetPixel(i + 20, y + 20, trans);
+                        for (int j = 0; j < y + 19; ++j)
                         {
                             mTileTexture.SetPixel(i + 20, j, trans);
                         }
@@ -388,7 +415,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int x = GetInterpolatedY(mBezierPoints, j);
 
-                        for (int i = 0; i < x + 20; ++i)
+                        mTileTexture.SetPixel(x + 20, j, trans);
+                        for (int i = 0; i < x + 19; ++i)
                         {
                             mTileTexture.SetPixel(i, j + 20, trans);
                         }
@@ -401,7 +429,8 @@ public class SplitImage : MonoBehaviour
                     {
                         int x = -GetInterpolatedY(mBezierPoints, j);
 
-                        for (int i = 0; i < x + 20; ++i)
+                        mTileTexture.SetPixel(x + 20, j + 20, trans);
+                        for (int i = 0; i < x + 21; ++i)
                         {
                             mTileTexture.SetPixel(i, j + 20, trans);
                         }
