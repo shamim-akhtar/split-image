@@ -31,7 +31,7 @@ This project allows creating Jigsaw tiles from an image using Bezier curves. I h
 #### It provides a good learning exercise for:
 > - Creating bezier points given a set of control points
 > - Interpolating the point set to fit the pixel gradient
-> - Creating sprites at runtime that applying transparency for regions that fall beyond the bezier curve.
+> - Creating sprites at runtime and applying transparency for regions that fall beyond the bezier curve.
 
 Besides the above core learning points, you will also learn some general programming techniques with Unity and C#.
 
