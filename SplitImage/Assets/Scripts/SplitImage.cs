@@ -74,9 +74,39 @@ public class SplitImage : MonoBehaviour
         DOWN_REVERSE,
         LEFT,
         LEFT_REVERSE,
+        NONE,
     }
+
+    Direction GetRandomDirection(int side)
+    {
+        float rand = Random.Range(0.0f, 1.0f);
+        switch(side)
+        {
+            case 0:
+                {
+                    if (rand < 0.5f) return Direction.UP;
+                    else return Direction.UP_REVERSE;
+                }
+            case 1:
+                {
+                    if (rand < 0.5f) return Direction.RIGHT;
+                    else return Direction.RIGHT_REVERSE;
+                }
+            case 2:
+                {
+                    if (rand < 0.5f) return Direction.DOWN;
+                    else return Direction.DOWN_REVERSE;
+                }
+            case 3:
+                {
+                    if (rand < 0.5f) return Direction.LEFT;
+                    else return Direction.LEFT_REVERSE;
+                }
+        }
+        return Direction.UP;
+    }
+
     List<Vector3> mBezierPoints = new List<Vector3>();
-    //Texture2D mTileTexture;
     Texture2D mBaseTexture;
 
     Color trans = new Color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -153,6 +183,10 @@ public class SplitImage : MonoBehaviour
     {
         GameObject obj = new GameObject();
         obj.name = "Tile_" + i.ToString() + "_" + j.ToString();
+        SplitTile tile = obj.AddComponent<SplitTile>();
+        tile.mIndex = new Vector2Int(i, j);
+        mGameObjects[i, j] = obj;
+
         SpriteRenderer spren = obj.AddComponent<SpriteRenderer>();
 
         obj.transform.position = new Vector3(i * 100, j * 100, 0.0f);
@@ -160,31 +194,59 @@ public class SplitImage : MonoBehaviour
         // create a new tile texture.
         Texture2D mTileTexture = CreateTileTexture(i, j);
 
-        List<Direction> directions = new List<Direction>();
-        directions.Add(Direction.UP_REVERSE);
-        directions.Add(Direction.RIGHT_REVERSE);
-        directions.Add(Direction.DOWN_REVERSE);
-        directions.Add(Direction.LEFT_REVERSE);
+        tile.mDirections[0] = GetRandomDirection(0);
+        tile.mDirections[1] = GetRandomDirection(1);
+        tile.mDirections[2] = GetRandomDirection(2);
+        tile.mDirections[3] = GetRandomDirection(3);
+
+        // check for bottom and left tile.
+        if (j > 0)
+        {
+            SplitTile downTile = mGameObjects[i, j-1].GetComponent<SplitTile>();
+            if(downTile.mDirections[0] == Direction.UP)
+            {
+                tile.mDirections[2] = Direction.DOWN_REVERSE;
+            }
+            else
+            {
+                tile.mDirections[2] = Direction.DOWN;
+            }
+        }
+
+        // check for bottom and left tile.
+        if (i > 0)
+        {
+            SplitTile downTile = mGameObjects[i - 1, j].GetComponent<SplitTile>();
+            if (downTile.mDirections[1] == Direction.RIGHT)
+            {
+                tile.mDirections[3] = Direction.LEFT_REVERSE;
+            }
+            else
+            {
+                tile.mDirections[3] = Direction.LEFT;
+            }
+        }
+
         if (i == 0)
         {
-            directions.Remove(Direction.LEFT_REVERSE);
+            tile.mDirections[3] = Direction.NONE;
         }
         if (i == mTilesX - 1)
         {
-            directions.Remove(Direction.RIGHT_REVERSE);
+            tile.mDirections[1] = Direction.NONE;
         }
         if (j == 0)
         {
-            directions.Remove(Direction.DOWN_REVERSE);
+            tile.mDirections[2] = Direction.NONE;
         }
-        if (j == mTilesY-1)
+        if (j == mTilesY - 1)
         {
-            directions.Remove(Direction.UP_REVERSE);
+            tile.mDirections[0] = Direction.NONE;
         }
-
-        for(int d = 0; d < directions.Count; ++d)
+        for (int d = 0; d < tile.mDirections.Length; ++d)
         {
-            ApplyBezierMask(mTileTexture, directions[d]);
+            if(tile.mDirections[d] != Direction.NONE)
+            ApplyBezierMask(mTileTexture, tile.mDirections[d]);
         }
 
         mTileTexture.Apply();
@@ -347,6 +409,12 @@ public class SplitImage : MonoBehaviour
                     break;
                 }
         }
+    }
+
+    private void Awake()
+    {
+        const int initialSeed = 1;
+        Random.InitState(initialSeed);
     }
 
     // Update is called once per frame
